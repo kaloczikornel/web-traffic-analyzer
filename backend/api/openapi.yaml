@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: Gift Card service
+  version: 1.0.0
+servers:
+  - url: /1.0
+tags:
+  - name: Cards
+    description: Manage cards
+paths:
+  /cards/search:
+    post:
+      tags:
+        - Cards
+      summary: Get cards of the tenant matching the filters
+      operationId: getCards
+      parameters:
+        - $ref: '#/components/parameters/OffsetParam'
+        - $ref: '#/components/parameters/LimitParam'
+      requestBody:
+        $ref: '#/components/requestBodies/getCardsBody'
+      responses:
+        200:
+          $ref: '#/components/responses/CardsSuccessResponse'
+        default:
+          $ref: '#/components/responses/APIErrorResponse'
+      security:
+        - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      description: Used to authenticate all API requests
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    OffsetParam:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 25
+  schemas:
+    Status:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+    Id:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+    Card:
+      additionalProperties: false
+      type: object
+      properties:
+        id:
+          type: number
+    APIError:
+      additionalProperties: false
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    CardFilters:
+      additionalProperties: false
+      type: object
+      properties:
+        after:
+          type: integer
+          nullable: true
+          description: UNIX timestamp
+        before:
+          type: integer
+          nullable: true
+          description: UNIX timestamp
+        name:
+          type: string
+          nullable: true
+          description: Card name
+  requestBodies:
+    getCardsBody:
+      required: false
+      description: Filters to be applied on cards
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CardFilters'
+  responses:
+    RequestStatusResponse:
+      description: Request status
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Status'
+    RequestIdResponse:
+      description: Id from the request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+    APIErrorResponse:
+      description: API Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+    CardSuccessResponse:
+      description: Card data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Card'
+    CardUpdateSuccessResponse:
+      description: Card data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                $ref: '#/components/schemas/Card/properties/id'
+    CardsSuccessResponse:
+      description: Cards data matching the filters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              total:
+                type: integer
+              cards:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
